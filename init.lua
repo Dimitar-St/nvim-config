@@ -258,6 +258,12 @@ require('lazy').setup({
         require('log-highlight').setup {}
     end,
   },
+  {
+      "ptdewey/yankbank-nvim",
+      config = function()
+          require('yankbank').setup()
+      end,
+  }
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
@@ -281,6 +287,7 @@ vim.o.hlsearch = false
 
 -- Make line numbers default
 vim.wo.number = true
+vim.wo.relativenumber = true
 
 -- Enable mouse mode
 vim.o.mouse = 'a'
@@ -380,11 +387,6 @@ require'nvim-web-devicons'.setup {
  };
 }
 
---require('ibl').setup({
---    indent = {
---      char = '┊',
---    },
---})
 
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
@@ -409,16 +411,6 @@ require('telescope').setup {
 
 -- Enable telescope fzf native, if installed
 pcall(require('telescope').load_extension, 'fzf')
--- require('remote-sshfs').setup({
---    connections = {
---      sshfs_args = { -- arguments to pass to the sshfs command
---        "-o reconnect",
---        "-o ConnectTimeout=5",
---      },
---  },
---:wq
---})
-
 
       -- "/path/to/custom/ssh_config"
 -- See `:help telescope.builtin`
@@ -452,14 +444,12 @@ vim.keymap.set("n", "<leader>rg", require('fzf-lua').grep, { silent = true })
 vim.keymap.set("n", "<leader>sh", require('fzf-lua').search_history, { silent = true })
 vim.keymap.set("n", "<leader>cp", require('fzf-lua').complete_path, { silent = true })
 
-vim.keymap.set('n', '<leader>b', '<Cmd>BufferPrevious<CR>', { silent = true})
-vim.keymap.set('n', '<leader>n', '<Cmd>BufferNext<CR>', { silent = true })-- '<Cmd>BufferPrevious<CR>', { silent = true})
+vim.keymap.set('n', '<leader>n', '<Cmd>BufferPrevious<CR>', { silent = true})
+vim.keymap.set('n', '<leader>y', '<Cmd>YankBank<CR>', { silent = true})
+vim.keymap.set('n', '<leader>b', '<Cmd>BufferNext<CR>', { silent = true })-- '<Cmd>BufferPrevious<CR>', { silent = true})
 vim.keymap.set('n', '<leader>c', '<Cmd>BufferClose<CR>', { silent = true })-- '<Cmd>BufferPrevious<CR>', { silent = true})
 
 vim.keymap.set('n', "<leader>s", '<Cmd>vsplit<CR>', { silent = true })
-vim.keymap.set('n', "<C-d>", "<C-d>zz")
-vim.keymap.set('n', "<C-u>", "<C-u>zz")
-
 
 vim.api.nvim_create_autocmd('VimEnter', {
   callback = function()
@@ -583,51 +573,6 @@ local on_attach = function(_, bufnr)
   vim.api.nvim_buf_create_user_command(bufnr, 'Format', function(_)
     vim.lsp.buf.format()
   end, { desc = 'Format current buffer with LSP' })
-  
-  vim.wo.relativenumber = true
-
-  local cwd  = 'cd /Users/I535931/Desktop/SAPDevelop/src/slocon/integrationtests/snapshot && '
-
-  vim.api.nvim_buf_create_user_command(bufnr, 'BuildSlocon', function (_)
-    os.execute(cwd .. '../../cfg/golang/make.py -T')
-  end, {})
-
--- ginkgo
-  --  --race
-  --  -timeout=999h
-  --  --tags=integration
-  --  --fail-fast
-  --  --label-filter=restore -vv
-  --  -- --landscapeTest=brownfield_move
-  --  --scheduled=true
-  --  --landscapeName=drs134bm
-  --  --transactionID=2001434349
-  --  --updateDownloadDir=false
-  --  --landscapeActionOnSuccess=Keep
-  --  --landscapeActionOnError=Keep
-  --  --snapshotName=bm3
-  --  --testTimeout=40m
-  --  --sid=SM3
-  --  --vault=dummy:~/Desktop/SAPDevelop/src/slocon/integrationtests/snapshot/default-sn.vault
-
-
-  vim.api.nvim_buf_create_user_command(bufnr, 'CreateS4', function(opts)
-    local command = cwd + 'ginkgo --race -timeout=999h --tags=integration --fail-fast --label-filter=restore -vv'
-    local testSpecificParams = ' -- --landscapeTest=' .. opts.fargs[1] .. ' --scheduled=true --landscapeName=' .. opts.fargs[2] .. ' --transactionID=2001434349 --updateDownloadDir=false --landscapeActionOnError=Keep --landscapeActionOnSuccess=Keep --snapshotName=bm3 --testTimeout=40m --sid=SM3 --vault=dummy:~/Desktop/SAPDevelop/src/slocon/integrationtests/snapshot/default-sn.vault'
-    command = command .. testSpecificParams
-
-    local status = os.execute(command)
-    if status == -1 then
-      print('Failed')
-    end
-  end,
-    {
-      nargs = 5,
-      complete = function(ArgLead, CmdLine, CursorPos)
-      end,
-      desc = 'Create S/4HANA system from snapshot'
-    })
-
 
   -- Should auot import but does not work
   vim.api.nvim_create_autocmd("BufWritePre", {
@@ -667,7 +612,7 @@ local servers = {
     },
     staticcheck = true,
     gofumpt = true,
-
+    '-logfile=~/gopls.log',
   },
   -- pyright = {},
   -- rust_analyzer = {},
@@ -709,7 +654,7 @@ mason_lspconfig.setup_handlers {
 -- See `:help cmp`
 local cmp = require 'cmp'
 local luasnip = require 'luasnip'
-require('luasnip.loaders.from_vscode').lazy_load()
+--require('luasnip.loaders.from_vscode').lazy_load()
 luasnip.config.setup {}
 
 cmp.setup {
@@ -755,4 +700,3 @@ cmp.setup {
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
-
